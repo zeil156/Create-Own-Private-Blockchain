@@ -11,7 +11,6 @@
 const SHA256 = require('crypto-js/sha256');
 const BlockClass = require('./block.js');
 const bitcoinMessage = require('bitcoinjs-message');
-const currentTime = new Date().getTime().toString().slice(0, -3);
 
 class Blockchain {
 
@@ -67,7 +66,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             const BlockObject = block;
             const height = await this.getChainHeight();
-            BlockObject.time = currentTime;
+            BlockObject.time = new Date().getTime().toString().slice(0, -3);
             if (height > -1) {
                 BlockObject.height = height + 1;
                 const previousBlock = this.chain[this.height];
@@ -96,7 +95,8 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-        resolve("${address}:${currentTime}:starRegistry")
+            const currentTime = new Date().getTime().toString().slice(0, -3);
+        resolve(address+":"+currentTime+":"+'starRegistry')
         });
     }
 
@@ -119,9 +119,10 @@ class Blockchain {
      */
     submitStar(address, message, signature, star) {
         let self = this;
+        let isValid = bitcoinMessage.verify(message, address, signature, null, true);
         return new Promise(async (resolve, reject) => {
             const messageTimeStamp = parseInt(message.split(':')[1]);
-            const currentTimeStamp = parseInt(currentTime);
+            const currentTimeStamp = parseInt(new Date().getTime().toString().slice(0, -3));
             if((currentTimeStamp - messageTimeStamp) < 5) {
                 bitcoinMessage.verify(message, address, signature);
                 const newBlock = new BlockClass.Block({star:star, owner:address});
