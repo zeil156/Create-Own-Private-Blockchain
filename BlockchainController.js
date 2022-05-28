@@ -16,6 +16,7 @@ class BlockchainController {
         this.submitStar();
         this.getBlockByHash();
         this.getStarsByOwner();
+        this.getErrorLog();
     }
 
     // Enpoint to Get a Block by Height (GET Endpoint)
@@ -117,6 +118,17 @@ class BlockchainController {
         });
     }
 
+    // Endpoint to Get Error Log for Chain
+    getErrorLog() {
+        this.app.get("/validateChain", async (req, res) => {
+            let errorLog = await this.blockchain.validateChain();
+            if(errorLog){
+                return res.status(200).json(errorLog);
+            } else {
+                return res.status(404).send("Error Log Not Found!");
+                }
+        });
+    }
 }
 
 module.exports = (app, blockchainObj) => { return new BlockchainController(app, blockchainObj);}
