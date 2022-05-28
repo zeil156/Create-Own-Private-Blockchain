@@ -123,7 +123,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             const messageTimeStamp = parseInt(message.split(':')[1]);
             const currentTimeStamp = parseInt(new Date().getTime().toString().slice(0, -3));
-            if((currentTimeStamp - messageTimeStamp) < 5) {
+            if((currentTimeStamp - messageTimeStamp) < 300) {
                 bitcoinMessage.verify(message, address, signature);
                 const newBlock = new BlockClass.Block({star:star, owner:address});
                 const resolvedBlock = await this._addBlock(newBlock);
