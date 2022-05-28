@@ -119,15 +119,18 @@ class Blockchain {
      */
     submitStar(address, message, signature, star) {
         let self = this;
-        let isValid = bitcoinMessage.verify(message, address, signature, null, true);
         return new Promise(async (resolve, reject) => {
             const messageTimeStamp = parseInt(message.split(':')[1]);
             const currentTimeStamp = parseInt(new Date().getTime().toString().slice(0, -3));
             if((currentTimeStamp - messageTimeStamp) < 300) {
-                bitcoinMessage.verify(message, address, signature);
-                const newBlock = new BlockClass.Block({star:star, owner:address});
-                const resolvedBlock = await this._addBlock(newBlock);
-                resolve(resolvedBlock);
+                try {
+                    bitcoinMessage.verify(message, address, signature, null, true);
+                    const newBlock = new BlockClass.Block({star:star, owner:address});
+                    const resolvedBlock = await this._addBlock(newBlock);
+                    resolve(resolvedBlock);
+                } catch(error) {
+                    console.log(error);
+                }
             } else {
                 reject("Error: problem with submission");
             }
@@ -179,12 +182,18 @@ class Blockchain {
         let self = this;
         const stars = [];
         return new Promise((resolve, reject) => {
-            this.chain.forEach((b) => {
-                const data = b.getBData();
-                if(data){
-                    if(data.owner === address) {
-                        stars.push(data);
+            this.chain.forEach(async (b) => {
+                try {
+                    const data = await b.getBData();
+                    if(data){
+                        if(data.owner === address) {
+                            stars.push(data);
+                    } else {
+                        console.log("Address does not match")
+                        }
                     }
+                } catch(e) {
+                    console.log(e);
                 }
             });
             resolve(stars);
@@ -202,20 +211,26 @@ class Blockchain {
         const errorLog = [];
         return new Promise(async (resolve, reject) => {
             this.chain.forEach(async (block) => {
-                const prevBlockHash = this.chain[block.height - 1];
-                if(await block.validate()) {
-                    if(block.height !== 0) {
-                        if(block.hash !== prevBlockHash.hash) {
-                            errorLog.push(new Error("Error: " + block + "is in the wrong place."));
+                try {
+                    const prevBlockHash = this.chain[block.height - 1];
+                    if(await block.validate()) {
+                        if(block.height !== 0) {
+                            if(block.hash !== prevBlockHash.hash) {
+                                errorLog.push(new Error("Error: " + block + "is in the wrong place."));
+                            }
                         }
-                    }
-                } else {
-                    errorLog.push(new Error("Error: " + block + "isn't validated."));
+                    } else {
+                        errorLog.push(new Error("Error: " + block + "isn't validated."));
+                        }
+                } catch(e) {
+                    console.log(e);
                 }
             });
             resolve(errorLog);
         });
     }
 }
+
+
 
 module.exports.Blockchain = Blockchain;   
