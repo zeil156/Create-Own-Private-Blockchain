@@ -72,9 +72,14 @@ class Blockchain {
                 const previousBlock = this.chain[this.height];
                 BlockObject.previousBlockHash = previousBlock.hash;
                 BlockObject.hash = SHA256(JSON.stringify(BlockObject)).toString();
-                this.chain.push(BlockObject);
-                this.height = this.chain.length -1;
-                resolve(BlockObject);
+                const errorCheck = await this.validateChain();
+                if(errorCheck.length === 0) {
+                    this.chain.push(BlockObject);
+                    this.height = this.chain.length -1;
+                    resolve(BlockObject);
+                } else {
+                    reject(errorCheck);
+                }                
             } else {
                 BlockObject.height = height + 1;
                 BlockObject.hash = SHA256(JSON.stringify(BlockObject)).toString();
